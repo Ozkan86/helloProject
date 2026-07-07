@@ -55,10 +55,5 @@ jobs:
           name: publish
           path: publish
 
-      - name: Deploy
-        run: |
-          rm -rf ~/apps/helloProject/publish/*
-          cp -r publish/* ~/apps/helloProject/publish/
-
-      - name: Restart Service
-        run: sudo systemctl restart helloapp
+      - name: Deploy Blue-Green
+        run: bash deploy.sh
