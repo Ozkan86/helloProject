@@ -55,5 +55,11 @@ jobs:
           name: publish
           path: publish
 
-      - name: Deploy Blue-Green
-        run: bash deploy.sh
+      - name: Copy Publish to Production Server
+        run: |
+          ssh user@192.168.68.50 "mkdir -p /home/user/apps/helloProject/incoming"
+          scp -r publish/* user@192.168.68.50:/home/user/apps/helloProject/incoming/
+
+      - name: Run Blue-Green Deployment
+        run: |
+          ssh user@192.168.68.50 "/home/user/apps/helloProject/deploy.sh"
