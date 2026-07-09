@@ -2,10 +2,12 @@ name: .NET MVC CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
 
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
 
@@ -16,7 +18,8 @@ jobs:
       - X64
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Restore
         run: dotnet restore
@@ -25,7 +28,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test --no-build --configuration Release
+        run: dotnet test --configuration Release --no-build
 
       - name: Publish
         run: dotnet publish -c Release -o publish
@@ -37,6 +40,7 @@ jobs:
           path: publish/
 
   deploy:
+
     needs: build
 
     runs-on:
@@ -55,11 +59,17 @@ jobs:
           name: publish
           path: publish
 
-      - name: Copy Publish to Production Server
+      - name: Create Incoming Directory
         run: |
-          ssh user@192.168.68.50 "mkdir -p /home/user/apps/helloProject/incoming"
-          scp -r publish/* user@192.168.68.50:/home/user/apps/helloProject/incoming/
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+          "mkdir -p /home/user/apps/helloProject/incoming"
 
-      - name: Run Blue-Green Deployment
+      - name: Copy Publish Files
         run: |
-          ssh user@192.168.68.50 "/home/user/apps/helloProject/deploy.sh"
+          scp -r publish/* \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/user/apps/helloProject/incoming/
+
+      - name: Blue-Green Deployment
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+          "/home/user/apps/helloProject/deploy.sh"
